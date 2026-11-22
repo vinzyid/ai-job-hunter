@@ -1,0 +1,192 @@
+# Kamus skill dan peran dunia IT.
+#
+# skill: kategori -> nama skill -> daftar alias. Alias dicocokkan tanpa membedakan huruf besar
+# dan kecil, dan hanya sebagai kata utuh ("java" tidak cocok dengan "javascript").
+# Nama skill sendiri otomatis ikut menjadi alias.
+#
+# pola_khusus: untuk skill yang namanya juga kata biasa (Go, R). Isinya regex yang
+# membedakan huruf besar dan kecil.
+
+skill:
+  bahasa:
+    Python: [python3]
+    JavaScript: [js, ecmascript, es6]
+    TypeScript: []
+    Java: []
+    Kotlin: []
+    PHP: []
+    Ruby: []
+    Rust: []
+    "C++": [cpp]
+    "C#": [csharp, c sharp]
+    Scala: []
+    Dart: []
+    Bash: [shell scripting, shell script]
+    SQL: []
+    HTML: [html5]
+    CSS: [css3]
+  frontend:
+    React: [react.js, reactjs]
+    Vue: [vue.js, vuejs]
+    Angular: [angularjs]
+    Svelte: [sveltekit]
+    Next.js: [nextjs]
+    Nuxt: [nuxt.js, nuxtjs]
+    Tailwind CSS: [tailwind, tailwindcss]
+    Bootstrap: []
+    Redux: []
+    Sass: [scss]
+    Webpack: []
+    Vite: []
+  backend:
+    Node.js: [nodejs]
+    NestJS: [nest.js]
+    Django: []
+    Flask: []
+    FastAPI: []
+    Laravel: []
+    Spring Boot: [springboot, spring framework]
+    Ruby on Rails: [rails]
+    .NET: [dotnet, asp.net, .net core]
+    REST API: [restful, rest apis, restful api, restful apis]
+    GraphQL: []
+    gRPC: []
+    Microservices: [microservice]
+    RabbitMQ: []
+    Kafka: [apache kafka]
+  mobile:
+    React Native: []
+    Flutter: []
+    Android: []
+    iOS: []
+    SwiftUI: []
+    Jetpack Compose: []
+  basis_data:
+    PostgreSQL: [postgres]
+    MySQL: [mariadb]
+    MongoDB: [mongo]
+    Redis: []
+    SQLite: []
+    Elasticsearch: [elastic search, opensearch]
+    Oracle: [oracle db, pl/sql]
+    SQL Server: [mssql, ms sql]
+    DynamoDB: []
+    Firebase: [firestore]
+    Supabase: []
+    NoSQL: []
+  data_dan_ai:
+    Pandas: []
+    NumPy: []
+    scikit-learn: [sklearn, scikit learn]
+    TensorFlow: []
+    PyTorch: []
+    Machine Learning: [ml]
+    Deep Learning: []
+    NLP: [natural language processing]
+    Computer Vision: []
+    LLM: [llms, large language model, large language models, generative ai, genai]
+    Data Analysis: [data analytics]
+    Data Visualization: [data visualisation]
+    Tableau: []
+    Power BI: [powerbi]
+    Airflow: [apache airflow]
+    dbt: []
+    ETL: [elt]
+    Snowflake: []
+    BigQuery: []
+    Statistics: [statistical analysis]
+  devops_dan_cloud:
+    Docker: []
+    Kubernetes: [k8s]
+    AWS: [amazon web services]
+    Azure: [microsoft azure]
+    GCP: [google cloud, google cloud platform]
+    Terraform: []
+    Ansible: []
+    CI/CD: [ci cd, continuous integration, continuous delivery, continuous deployment]
+    GitHub Actions: []
+    GitLab CI: []
+    Jenkins: []
+    Linux: [unix]
+    Nginx: []
+    Prometheus: []
+    Grafana: []
+    Serverless: [lambda]
+  pengujian:
+    Unit Testing: [unit tests, unit test]
+    Pytest: []
+    Selenium: []
+    Cypress: []
+    Playwright: []
+    Test Automation: [automated testing, automation testing]
+    Postman: []
+  keamanan:
+    Cybersecurity: [cyber security, information security, infosec]
+    Penetration Testing: [pentest, pentesting]
+    OWASP: []
+    SIEM: []
+    OAuth: [oauth2, oauth 2.0]
+    JWT: []
+  alat_dan_cara_kerja:
+    Git: []
+    GitHub: []
+    GitLab: []
+    Jira: []
+    Agile: []
+    Scrum: []
+    Figma: []
+    UI/UX: [ux design, ui design, user experience]
+    Web Scraping: [scraping]
+    API Integration: [api integrations]
+
+pola_khusus:
+  Swift: '\bSwift\b'
+  Express: 'Express\.js|ExpressJS|\bExpress(?=\s*[,/)])'
+  Expo: '\bExpo\b'
+  Excel: '(?:Microsoft|MS) Excel|\bExcel(?=\s*[,/)]|\s+(?:and|or|spreadsheets?|skills)\b)'
+  Spark: '\bSpark\b|PySpark'
+  Jest: '\bJest\b'
+  Go: '\bGolang\b|\bgolang\b|\bGo(?=\s*[,/)]|\s+(?:and|or|developer|engineer|programming|lang|services?)\b)'
+  R: '\bR(?=\s*[,/)]|\s+(?:and|or|programming|language|studio|shiny)\b)|\bRStudio\b'
+
+kategori_pola_khusus:
+  Go: bahasa
+  R: bahasa
+  Swift: bahasa
+  Express: backend
+  Expo: mobile
+  Excel: data_dan_ai
+  Spark: data_dan_ai
+  Jest: pengujian
+
+# Peran ditentukan dari judul lowongan. Urutan penting: pola yang lebih khusus ditaruh di atas.
+peran:
+  data_engineer: ['data engineer', 'analytics engineer', 'etl developer', 'data platform']
+  # Kata "AI" saja hanya dihitung kalau judul tidak menyebut peran lain, supaya
+  # "Backend Engineer, AI Agents" tetap terbaca sebagai backend.
+  ai_ml: ['machine learning', '\bml\b', 'data scien', 'deep learning', '\bnlp\b', 'computer vision', '\bllm',
+          '^(?!.*(?:back[ -]?end|front[ -]?end|full[ -]?stack|devops|security|mobile|\bqa\b)).*\bai\b']
+  data_analyst: ['data analyst', 'business intelligence', '\bbi\b', 'analytics', 'business analyst']
+  devops_cloud: ['devops', '\bsre\b', 'site reliability', 'cloud', 'platform engineer', 'infrastructure', 'kubernetes']
+  keamanan: ['security', 'penetration', 'pentest', '\bsoc\b', 'infosec']
+  qa: ['\bqa\b', 'quality assurance', 'test engineer', 'tester', '\bsdet\b', 'test automation']
+  mobile: ['mobile', 'android', '\bios\b', 'flutter', 'react native']
+  fullstack: ['full[ -]?stack']
+  frontend: ['front[ -]?end', 'react', 'vue', 'angular', 'web developer', 'ui engineer', 'ui developer']
+  backend: ['back[ -]?end', 'python', 'java\b', 'node', 'golang', '\bgo\b', 'php', 'ruby', 'rust', '\.net', 'laravel', 'django', 'api engineer']
+  ui_ux: ['\bux\b', '\bui\b', 'product designer', 'ux/ui', 'interaction designer']
+  dukungan_it: ['it support', 'help ?desk', 'service desk', 'system administrator', 'sysadmin', 'network engineer', 'it technician', 'technical support', 'support engineer']
+  software_umum: ['software engineer', 'software developer', 'developer', 'programmer', 'engineer(?:ing)? manager', 'solutions? architect', 'software architect']
+
+# Judul yang memuat salah satu pola ini bukan lowongan IT walaupun menyebut kata teknis,
+# misalnya "Sales Engineer - AI Agents" atau "AI Trainer - Video Annotation".
+bukan_it: ['\bsales\b', 'marketing (?:specialist|manager)', 'recruit', 'annotat', 'content review', 'ai trainer',
+           'review lead', 'product manager', 'project manager', 'technical writer', 'account (?:executive|manager)']
+
+# Tingkat ditentukan dari judul lowongan. Kalau tidak ada yang cocok, tingkat dianggap menengah.
+tingkat:
+  magang: ['intern\b', 'internship', 'trainee', 'working student', 'werkstudent', 'praktik']
+  junior: ['junior', '\bjr\b', 'entry[ -]level', 'graduate', 'associate', 'fresh']
+  pimpinan: ['\blead\b', 'principal', 'staff', 'head of', 'manager', 'director', 'architect', '\bvp\b', 'chief']
+  senior: ['senior', '\bsr\b', 'expert']
+  menengah: ['mid[ -]level', '\bmid\b', 'intermediate']

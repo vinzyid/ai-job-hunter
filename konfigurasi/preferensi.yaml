@@ -1,0 +1,37 @@
+# Pengaturan analisis skill. Ubah sesuai kebutuhan, lalu jalankan ulang "python main.py skill".
+
+# Wilayah bawaan: lokal (untuk Indonesia), internasional, atau semua.
+# Bisa diganti sekali jalan dengan pilihan --wilayah, misalnya: python main.py skill --wilayah lokal
+wilayah: lokal
+
+# Khusus lowongan internasional: lowongan yang lokasinya memuat salah satu kata ini dianggap
+# terbuka untuk pelamar dari Indonesia.
+lokasi_diterima:
+  - worldwide
+  - anywhere
+  - global
+  - asia
+  - apac
+  - indonesia
+  - southeast asia
+
+# false (bawaan): semua lowongan internasional ikut dihitung, karena yang dicari adalah skill yang
+# diminta industri, dan datanya jadi jauh lebih banyak (sekitar 500 lowongan, bukan 150).
+# true: hanya lowongan internasional yang bisa dilamar dari Indonesia (lokasinya memuat kata di atas).
+hanya_lokasi_diterima: false
+
+# Golongan skill menurut persen lowongan yang memintanya:
+#   wajib dikuasai  : diminta oleh batas_wajib persen lowongan atau lebih
+#   sering diminta  : antara batas_sering dan batas_wajib
+#   nilai tambah    : di bawah batas_sering
+batas_wajib: 30
+batas_sering: 10
+
+# Jumlah skill yang ditampilkan di terminal dan laporan.
+jumlah_skill: 20
+
+# Tren: lowongan yang dipasang dalam sekian hari terakhir dibandingkan dengan yang lebih lama.
+hari_tren: 14
+
+# Pilihan --ai: jumlah lowongan yang dibaca AI untuk mencari skill di luar kamus.
+jumlah_lowongan_ai: 6

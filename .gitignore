@@ -1,0 +1,25 @@
+# Data unduhan, cache, dan hasil
+data/lowongan/
+data/cache_ai/
+data/lamaran/
+data/cv/*
+!data/cv/contoh_*.md
+output/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Rahasia dan sistem
+.env
+.DS_Store
+
+# Video
+video/animasi/node_modules/
+video/animasi/public/suara/
+video/*.mp4
+
+# Cadangan versi lama
+cadangan/
