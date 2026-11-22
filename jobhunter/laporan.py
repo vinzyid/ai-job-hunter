@@ -26,6 +26,7 @@ SUMBER_DATA = {
     "himalayas": ("Himalayas", "https://himalayas.app"),
     "himalayas_indonesia": ("Himalayas (Indonesia)", ""),  # Tautannya sama dengan Himalayas.
     "remoteok": ("Remote OK", "https://remoteok.com"),
+    "karier_perusahaan": ("Halaman karier perusahaan", ""),  # Tautan ada di setiap lowongan.
     "manual": ("Catatan sendiri", ""),
 }
 GOLONGAN = ["wajib", "sering", "tambahan"]

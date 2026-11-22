@@ -1,6 +1,6 @@
 # Cara Menjalankan AI Job Hunter dan Melihat Hasilnya
 
-Panduan langkah demi langkah untuk macOS atau Linux. Di Windows, ganti `source .venv/bin/activate` dengan `.venv\Scripts\activate`.
+Panduan langkah demi langkah untuk macOS atau Linux. Di Windows (PowerShell), ganti `python3` dengan `python`, `source .venv/bin/activate` dengan `.venv\Scripts\activate`, dan `cp` dengan `copy`. Kalau PowerShell menolak menjalankan skrip aktivasi, jalankan sekali `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ## 1. Persiapan (sekali saja)
 

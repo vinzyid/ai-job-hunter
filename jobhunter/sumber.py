@@ -16,7 +16,7 @@ import requests
 
 from jobhunter import skill
 from jobhunter.berkas import baca_csv, baca_json, simpan_csv, simpan_json, tambah_jsonl
-from jobhunter.pengaturan import FILE_LOWONGAN, FILE_LOWONGAN_MANUAL, FOLDER_LOWONGAN, FOLDER_MENTAH
+from jobhunter.pengaturan import FILE_LOWONGAN, FILE_LOWONGAN_MANUAL, FOLDER_LOWONGAN, FOLDER_MENTAH, baca_yaml
 from jobhunter.teks import buang_html, rapikan
 
 PENGENAL = {"User-Agent": "ai-job-hunter-uts/1.0 (proyek kuliah, bukan komersial)"}
@@ -62,11 +62,14 @@ def minta(url, parameter=None):
 
 
 def ke_tanggal(nilai):
-    """Menerima detik sejak 1970 atau teks ISO, mengembalikan tanggal berbentuk 2026-11-10."""
+    """Menerima detik (atau milidetik) sejak 1970 atau teks ISO, mengembalikan tanggal berbentuk 2026-11-10."""
     if not nilai:
         return ""
     if isinstance(nilai, (int, float)) or str(nilai).isdigit():
-        return datetime.fromtimestamp(int(nilai), tz=timezone.utc).date().isoformat()
+        detik = int(nilai)
+        if detik > 10**11:  # Lever memakai milidetik.
+            detik //= 1000
+        return datetime.fromtimestamp(detik, tz=timezone.utc).date().isoformat()
     return str(nilai)[:10]
 
 
@@ -195,6 +198,143 @@ def ambil_manual():
     return baris, hasil
 
 
+# Halaman karier perusahaan. Setiap fungsi ats_... menerima kode perusahaan di ATS dan nama
+# tampilannya, lalu mengembalikan (data mentah, lowongan di Indonesia). Daftar perusahaannya
+# ada di konfigurasi/perusahaan.yaml.
+
+def di_indonesia(lokasi):
+    """Benar kalau teks lokasi menyebut Indonesia atau kota di Indonesia."""
+    return bool(POLA_INDONESIA.search(lokasi or ""))
+
+
+def ats_lever(kode, nama):
+    """Lowongan dari Lever (jobs.lever.co). Deskripsi, daftar tugas, dan syarat digabung."""
+    mentah = minta(f"https://api.lever.co/v0/postings/{kode}", {"mode": "json"})
+    hasil = []
+    for isi in mentah:
+        kategori = isi.get("categories") or {}
+        lokasi = ", ".join(kategori.get("allLocations") or [kategori.get("location") or ""])
+        if isi.get("country") != "ID" and not di_indonesia(lokasi):
+            continue
+        daftar = [f"<h3>{bagian.get('text', '')}</h3><ul>{bagian.get('content', '')}</ul>" for bagian in isi.get("lists") or []]
+        hasil.append({
+            "judul": isi.get("text") or "", "perusahaan": nama, "lokasi": lokasi,
+            "jenis": ", ".join(filter(None, [kategori.get("commitment"), isi.get("workplaceType")])),
+            "tag": [kategori.get("team") or "", kategori.get("department") or ""],
+            "tanggal": ke_tanggal(isi.get("createdAt")), "url": isi.get("hostedUrl") or "",
+            "deskripsi": "\n".join([isi.get("description") or "", *daftar, isi.get("additional") or ""]),
+        })
+    return mentah, hasil
+
+
+def ats_greenhouse(kode, nama):
+    """Lowongan dari Greenhouse (job-boards.greenhouse.io)."""
+    mentah = minta(f"https://boards-api.greenhouse.io/v1/boards/{kode}/jobs", {"content": "true"})["jobs"]
+    hasil = [
+        {
+            "judul": isi.get("title") or "", "perusahaan": nama,
+            "lokasi": (isi.get("location") or {}).get("name") or "", "jenis": "",
+            "tag": [bagian.get("name") or "" for bagian in isi.get("departments") or []],
+            "tanggal": ke_tanggal(isi.get("first_published") or isi.get("updated_at")),
+            "url": isi.get("absolute_url") or "", "deskripsi": isi.get("content") or "",
+        }
+        for isi in mentah if di_indonesia((isi.get("location") or {}).get("name"))
+    ]
+    return mentah, hasil
+
+
+def ats_smartrecruiters(kode, nama):
+    """Lowongan dari SmartRecruiters (jobs.smartrecruiters.com).
+
+    Daftar lowongannya tidak memuat deskripsi, jadi deskripsi diambil satu per satu.
+    Supaya hemat permintaan, deskripsi hanya diambil untuk judul yang terbaca sebagai lowongan IT.
+    """
+    daftar, mulai = [], 0
+    while True:
+        halaman = minta(f"https://api.smartrecruiters.com/v1/companies/{kode}/postings",
+                        {"country": "id", "limit": 100, "offset": mulai})
+        daftar.extend(halaman["content"])
+        mulai += 100
+        if mulai >= halaman.get("totalFound", 0) or not halaman["content"]:
+            break
+    mentah, hasil = {"daftar": daftar, "rincian": []}, []
+    for isi in daftar:
+        tempat = isi.get("location") or {}
+        lokasi = ", ".join(bagian.strip() for bagian in (tempat.get("fullLocation") or "").split(",") if bagian.strip())
+        lowongan = {
+            "judul": isi.get("name") or "", "perusahaan": nama,
+            "lokasi": lokasi + (" (remote)" if tempat.get("remote") else ""),
+            "jenis": (isi.get("typeOfEmployment") or {}).get("label") or "",
+            "tag": [(isi.get("function") or {}).get("label") or ""],
+            "tanggal": ke_tanggal(isi.get("releasedDate")),
+            "url": f"https://jobs.smartrecruiters.com/{kode}/{isi.get('id')}", "deskripsi": "",
+        }
+        if skill.tentukan_peran(lowongan["judul"]) and isi.get("ref"):
+            rincian = minta(isi["ref"])
+            mentah["rincian"].append(rincian)
+            bagian = (rincian.get("jobAd") or {}).get("sections") or {}
+            lowongan["deskripsi"] = "\n".join(
+                f"<h3>{isi_bagian.get('title', '')}</h3>{isi_bagian.get('text', '')}"
+                for nama_bagian, isi_bagian in bagian.items() if nama_bagian != "companyDescription"
+            )
+            lowongan["url"] = rincian.get("postingUrl") or lowongan["url"]
+        hasil.append(lowongan)
+    return mentah, hasil
+
+
+def ats_workable(kode, nama):
+    """Lowongan dari Workable (apply.workable.com)."""
+    mentah = minta(f"https://apply.workable.com/api/v1/widget/accounts/{kode}", {"details": "true"})["jobs"]
+    hasil = []
+    for isi in mentah:
+        tempat = [", ".join(filter(None, [t.get("city"), t.get("country")])) for t in isi.get("locations") or []]
+        lokasi = "; ".join(tempat) or ", ".join(filter(None, [isi.get("city"), isi.get("country")]))
+        if not di_indonesia(lokasi):
+            continue
+        hasil.append({
+            "judul": isi.get("title") or "", "perusahaan": nama,
+            "lokasi": lokasi + (" (remote)" if isi.get("telecommuting") else ""),
+            "jenis": isi.get("employment_type") or "", "tag": [isi.get("department") or "", isi.get("function") or ""],
+            "tanggal": ke_tanggal(isi.get("published_on")), "url": isi.get("url") or "",
+            "deskripsi": isi.get("description") or "",
+        })
+    return mentah, hasil
+
+
+ATS = {
+    "lever": ats_lever,
+    "greenhouse": ats_greenhouse,
+    "smartrecruiters": ats_smartrecruiters,
+    "workable": ats_workable,
+}
+
+
+def ambil_karier_perusahaan():
+    """Lowongan di Indonesia dari halaman karier perusahaan di konfigurasi/perusahaan.yaml.
+
+    Satu perusahaan yang gagal hanya dilewati. Kalau semuanya gagal, sumber ini dianggap gagal.
+    Mengembalikan (data mentah per perusahaan, daftar lowongan).
+    """
+    mentah, hasil, gagal = {}, [], []
+    for ats, daftar_perusahaan in (baca_yaml("perusahaan.yaml") or {}).items():
+        if ats not in ATS:
+            print(f"    ATS tidak dikenal di perusahaan.yaml: {ats} (pilihan: {', '.join(ATS)})")
+            continue
+        for kode, nama in (daftar_perusahaan or {}).items():
+            try:
+                isi_mentah, lowongan = ATS[ats](kode, nama)
+            except (requests.RequestException, KeyError, ValueError, TypeError) as galat:
+                print(f"    {nama} ({ats}): gagal ({type(galat).__name__}: {galat})")
+                gagal.append(nama)
+                continue
+            mentah[f"{ats}/{kode}"] = isi_mentah
+            hasil.extend(lowongan)
+            print(f"    {nama} ({ats}): {len(lowongan)} lowongan di Indonesia")
+    if gagal and not mentah:
+        raise ValueError(f"semua perusahaan gagal diambil: {', '.join(gagal)}")
+    return mentah, hasil
+
+
 SUMBER = {
     "remotive": ambil_remotive,
     "arbeitnow": ambil_arbeitnow,
@@ -202,6 +342,7 @@ SUMBER = {
     "himalayas": ambil_himalayas,
     "himalayas_indonesia": ambil_himalayas_indonesia,
     "remoteok": ambil_remoteok,
+    "karier_perusahaan": ambil_karier_perusahaan,
     "manual": ambil_manual,
 }
 

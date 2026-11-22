@@ -2,7 +2,7 @@
 
 Semua fungsi di program, dibuat otomatis dari kode dan docstring-nya. Urutannya mengikuti alur program: titik masuk, pengambilan, pengenalan skill, analisis, AI, laporan, lalu modul pendukung.
 
-Jumlah: **125 fungsi** di 10 file.
+Jumlah: **131 fungsi** di 10 file.
 
 
 ## `main.py` (14 fungsi)
@@ -26,36 +26,42 @@ AI Job Hunter: mencari tahu skill apa yang diminta lowongan kerja IT.
 | `tambah_ai` | 143 | `bagian` | Pilihan AI: menyalakan temuan AI dan memilih model. |
 | `main` | 170 | `–` | Titik masuk program: membaca pilihan terminal lalu menjalankan perintah yang dipilih. |
 
-## `jobhunter/sumber.py` (24 fungsi)
+## `jobhunter/sumber.py` (30 fungsi)
 
 Mengambil lowongan dari API publik, lalu menyamakan bentuknya.
 
 | Fungsi | Baris | Parameter | Peran dan nilai kembalian |
 |---|---|---|---|
 | `minta` | 51 | `url, parameter=None` | Mengirim satu permintaan GET ke API dan mengembalikan JSON-nya. Parameter: alamat API dan parameter pencarian (kamus, boleh kosong). Kode HTTP 4xx/5xx menjadi galat (raise_for_status). Setelah setiap permintaan program berhenti JEDA_DETIK detik supaya tidak membebani server sumber. |
-| `ke_tanggal` | 64 | `nilai` | Menerima detik sejak 1970 atau teks ISO, mengembalikan tanggal berbentuk 2026-11-10. |
-| `ke_angka` | 73 | `nilai` | Gaji dari sumber kadang berupa teks, 0, atau kosong. Yang bukan angka positif menjadi None. |
-| `ambil_remotive` | 85 | `–` | Lowongan kerja jarak jauh dari Remotive. Mengembalikan (data mentah, daftar lowongan). |
-| `ambil_arbeitnow` | 101 | `jumlah_halaman=2` | Hanya lowongan jarak jauh. Sisanya kerja di kantor di Jerman, yang tidak bisa dilamar dari Indonesia. |
-| `ambil_jobicy` | 120 | `–` | 100 lowongan terbaru kategori dev dari Jobicy, lengkap dengan gaji kalau dicantumkan. |
-| `ambil_himalayas` | 138 | `negara=None` | Tanpa negara: lowongan dari mana saja. Dengan negara: hanya yang menerima pelamar dari negara itu. |
-| `ambil_himalayas_indonesia` | 160 | `–` | Lowongan Himalayas yang menerima pelamar dari Indonesia. Sumber utama lowongan lokal. |
-| `ambil_remoteok` | 165 | `–` | Lowongan dari Remote OK. Gaji di sumber ini selalu dalam USD per tahun. |
-| `ambil_manual` | 183 | `–` | Lowongan yang dicatat sendiri oleh pengguna di data/lowongan_manual.csv. |
-| `tentukan_wilayah` | 209 | `lokasi, sumber` | Memilah lowongan menjadi "lokal" (untuk Indonesia) atau "internasional". Lokal berarti lokasinya menyebut Indonesia atau kota di Indonesia dan paling banyak menyebut tiga tempat. Lowongan jarak jauh yang menerima puluhan negara, termasuk Indonesia, tetap dihitung internasional. Lowongan yang dicatat sendiri selalu lokal. |
-| `saring_wilayah` | 222 | `lowongan, wilayah` | Hanya lowongan wilayah yang diminta ("lokal" atau "internasional"); "semua" tidak menyaring. |
-| `buat_id` | 229 | `sumber, url, judul, perusahaan` | ID pendek yang tetap sama setiap kali lowongan yang sama diambil lagi. |
-| `lengkapi` | 235 | `lowongan, sumber, hari_ini` | Membersihkan deskripsi dan menambah peran, tingkat, serta skill. None kalau bukan lowongan IT. |
-| `kunci_kembar` | 270 | `lowongan` | Lowongan yang sama sering dipasang di beberapa situs. Judul dan perusahaan dipakai untuk mengenalinya. |
-| `gabungkan` | 276 | `lama, baru` | Menggabungkan lowongan baru ke data lama. Lowongan yang sudah ada diperbarui tetapi tanggal pertama dilihat dipertahankan. Lowongan kembar dari sumber lain dilewati. Mengembalikan (hasil, jumlah baru, jumlah kembar). |
-| `segarkan_peran` | 302 | `tersimpan` | Menghitung ulang peran dan tingkat lowongan tersimpan dengan kamus yang sekarang. Kamus di skill_it.yaml bisa berubah setelah lowongan disimpan. Mengembalikan (yang tetap, yang dibuang karena judulnya tidak lagi terbaca sebagai lowongan IT). |
-| `alasan_tutup` | 318 | `lowongan, hari_ini` | Alasan lowongan dianggap tutup dilihat dari tanggalnya saja, atau None kalau masih buka. |
-| `halaman_hilang` | 328 | `url` | Benar kalau halaman lowongan sudah dihapus (404 atau 410). Galat jaringan dan kode lain, misalnya 403 dari situs yang menolak program, tidak dianggap tutup karena belum tentu lowongannya hilang. |
-| `pilah_tutup` | 345 | `semua, hari_ini, sumber_berhasil, cek_halaman=None` | Memisahkan lowongan yang masih buka dari yang tutup. Mengembalikan (buka, tutup). Lowongan dianggap tutup kalau salah satu berlaku: 1. tanggal tutup dari sumber sudah lewat; 2. tidak muncul lagi di sumbernya lebih dari BATAS_HARI_TIDAK_TERLIHAT hari; 3. dicatat sendiri, lalu barisnya dihapus dari lowongan_manual.csv; 4. tidak muncul di pengambilan hari ini dan halamannya sudah dihapus. cek_halaman adalah fungsi pemeriksa halaman. Kalau None, aturan 4 dilewati. |
-| `arsipkan` | 378 | `tutup, hari_ini` | Mencatat lowongan yang dibuang, tanpa deskripsinya, supaya bisa ditelusuri. |
-| `baca_lowongan` | 387 | `–` | Lowongan yang masih buka. Yang tutup menurut tanggal disaring juga di sini, supaya tidak muncul walaupun pengambilan belum dijalankan lagi. |
-| `baca_lowongan_wilayah` | 403 | `wilayah` | Lowongan untuk satu pilihan wilayah. Berhenti dengan petunjuk kalau datanya terlalu sedikit. |
-| `jalankan` | 415 | `nama_sumber=None, cek_tautan=True` | Mengambil semua sumber yang diminta, lalu membuang lowongan yang sudah tutup. Satu sumber yang gagal tidak menghentikan yang lain, dan lowongan dari sumber yang gagal tidak diperiksa halamannya pada pengambilan ini. |
+| `ke_tanggal` | 64 | `nilai` | Menerima detik (atau milidetik) sejak 1970 atau teks ISO, mengembalikan tanggal berbentuk 2026-11-10. |
+| `ke_angka` | 76 | `nilai` | Gaji dari sumber kadang berupa teks, 0, atau kosong. Yang bukan angka positif menjadi None. |
+| `ambil_remotive` | 88 | `–` | Lowongan kerja jarak jauh dari Remotive. Mengembalikan (data mentah, daftar lowongan). |
+| `ambil_arbeitnow` | 104 | `jumlah_halaman=2` | Hanya lowongan jarak jauh. Sisanya kerja di kantor di Jerman, yang tidak bisa dilamar dari Indonesia. |
+| `ambil_jobicy` | 123 | `–` | 100 lowongan terbaru kategori dev dari Jobicy, lengkap dengan gaji kalau dicantumkan. |
+| `ambil_himalayas` | 141 | `negara=None` | Tanpa negara: lowongan dari mana saja. Dengan negara: hanya yang menerima pelamar dari negara itu. |
+| `ambil_himalayas_indonesia` | 163 | `–` | Lowongan Himalayas yang menerima pelamar dari Indonesia. Sumber utama lowongan lokal. |
+| `ambil_remoteok` | 168 | `–` | Lowongan dari Remote OK. Gaji di sumber ini selalu dalam USD per tahun. |
+| `ambil_manual` | 186 | `–` | Lowongan yang dicatat sendiri oleh pengguna di data/lowongan_manual.csv. |
+| `di_indonesia` | 205 | `lokasi` | Benar kalau teks lokasi menyebut Indonesia atau kota di Indonesia. |
+| `ats_lever` | 210 | `kode, nama` | Lowongan dari Lever (jobs.lever.co). Deskripsi, daftar tugas, dan syarat digabung. |
+| `ats_greenhouse` | 230 | `kode, nama` | Lowongan dari Greenhouse (job-boards.greenhouse.io). |
+| `ats_smartrecruiters` | 246 | `kode, nama` | Lowongan dari SmartRecruiters (jobs.smartrecruiters.com). Daftar lowongannya tidak memuat deskripsi, jadi deskripsi diambil satu per satu. Supaya hemat permintaan, deskripsi hanya diambil untuk judul yang terbaca sebagai lowongan IT. |
+| `ats_workable` | 285 | `kode, nama` | Lowongan dari Workable (apply.workable.com). |
+| `ambil_karier_perusahaan` | 312 | `–` | Lowongan di Indonesia dari halaman karier perusahaan di konfigurasi/perusahaan.yaml. Satu perusahaan yang gagal hanya dilewati. Kalau semuanya gagal, sumber ini dianggap gagal. Mengembalikan (data mentah per perusahaan, daftar lowongan). |
+| `tentukan_wilayah` | 350 | `lokasi, sumber` | Memilah lowongan menjadi "lokal" (untuk Indonesia) atau "internasional". Lokal berarti lokasinya menyebut Indonesia atau kota di Indonesia dan paling banyak menyebut tiga tempat. Lowongan jarak jauh yang menerima puluhan negara, termasuk Indonesia, tetap dihitung internasional. Lowongan yang dicatat sendiri selalu lokal. |
+| `saring_wilayah` | 363 | `lowongan, wilayah` | Hanya lowongan wilayah yang diminta ("lokal" atau "internasional"); "semua" tidak menyaring. |
+| `buat_id` | 370 | `sumber, url, judul, perusahaan` | ID pendek yang tetap sama setiap kali lowongan yang sama diambil lagi. |
+| `lengkapi` | 376 | `lowongan, sumber, hari_ini` | Membersihkan deskripsi dan menambah peran, tingkat, serta skill. None kalau bukan lowongan IT. |
+| `kunci_kembar` | 411 | `lowongan` | Lowongan yang sama sering dipasang di beberapa situs. Judul dan perusahaan dipakai untuk mengenalinya. |
+| `gabungkan` | 417 | `lama, baru` | Menggabungkan lowongan baru ke data lama. Lowongan yang sudah ada diperbarui tetapi tanggal pertama dilihat dipertahankan. Lowongan kembar dari sumber lain dilewati. Mengembalikan (hasil, jumlah baru, jumlah kembar). |
+| `segarkan_peran` | 443 | `tersimpan` | Menghitung ulang peran dan tingkat lowongan tersimpan dengan kamus yang sekarang. Kamus di skill_it.yaml bisa berubah setelah lowongan disimpan. Mengembalikan (yang tetap, yang dibuang karena judulnya tidak lagi terbaca sebagai lowongan IT). |
+| `alasan_tutup` | 459 | `lowongan, hari_ini` | Alasan lowongan dianggap tutup dilihat dari tanggalnya saja, atau None kalau masih buka. |
+| `halaman_hilang` | 469 | `url` | Benar kalau halaman lowongan sudah dihapus (404 atau 410). Galat jaringan dan kode lain, misalnya 403 dari situs yang menolak program, tidak dianggap tutup karena belum tentu lowongannya hilang. |
+| `pilah_tutup` | 486 | `semua, hari_ini, sumber_berhasil, cek_halaman=None` | Memisahkan lowongan yang masih buka dari yang tutup. Mengembalikan (buka, tutup). Lowongan dianggap tutup kalau salah satu berlaku: 1. tanggal tutup dari sumber sudah lewat; 2. tidak muncul lagi di sumbernya lebih dari BATAS_HARI_TIDAK_TERLIHAT hari; 3. dicatat sendiri, lalu barisnya dihapus dari lowongan_manual.csv; 4. tidak muncul di pengambilan hari ini dan halamannya sudah dihapus. cek_halaman adalah fungsi pemeriksa halaman. Kalau None, aturan 4 dilewati. |
+| `arsipkan` | 519 | `tutup, hari_ini` | Mencatat lowongan yang dibuang, tanpa deskripsinya, supaya bisa ditelusuri. |
+| `baca_lowongan` | 528 | `–` | Lowongan yang masih buka. Yang tutup menurut tanggal disaring juga di sini, supaya tidak muncul walaupun pengambilan belum dijalankan lagi. |
+| `baca_lowongan_wilayah` | 544 | `wilayah` | Lowongan untuk satu pilihan wilayah. Berhenti dengan petunjuk kalau datanya terlalu sedikit. |
+| `jalankan` | 556 | `nama_sumber=None, cek_tautan=True` | Mengambil semua sumber yang diminta, lalu membuang lowongan yang sudah tutup. Satu sumber yang gagal tidak menghentikan yang lain, dan lowongan dari sumber yang gagal tidak diperiksa halamannya pada pengambilan ini. |
 
 ## `jobhunter/skill.py` (10 fungsi)
 
@@ -136,31 +142,31 @@ Menyusun hasil analisis satu saringan menjadi satu halaman HTML statis yang bisa
 
 | Fungsi | Baris | Parameter | Peran dan nilai kembalian |
 |---|---|---|---|
-| `e` | 343 | `nilai` | Semua teks dari lowongan dan AI di-escape supaya tidak terbaca sebagai HTML. |
-| `angka` | 348 | `nilai` | Menulis desimal dengan koma, seperti kebiasaan di Indonesia. None menjadi tanda strip. |
-| `tautan` | 355 | `url` | Hanya alamat http atau https yang boleh menjadi tautan; isian lain (misalnya javascript:) diganti. |
-| `rapikan` | 361 | `nama` | Nama di kamus memakai garis bawah (dukungan_it); di laporan ditulis dengan spasi. |
-| `nama_sumber` | 366 | `kode` | Nama tampilan sumber data, misalnya "remoteok" menjadi "Remote OK". |
-| `tanggal_indo` | 371 | `teks` | Mengubah 2026-11-08 menjadi 8 Nov 2026. Teks yang bukan tanggal dikembalikan apa adanya. |
-| `judul_saringan` | 380 | `saringan` | Pertanyaan yang dijawab laporan dalam kata-kata, misalnya "backend junior, lowongan lokal". |
-| `daftar_tag` | 388 | `nama, kelas=''` | Deretan label kecil, satu per nama. |
-| `bungkus` | 393 | `kode, judul, isi, keterangan=''` | Satu bagian laporan. Kodenya menjadi sasaran tautan di menu (#kode). |
-| `grafik_batang` | 399 | `baris, maks, satuan='', catatan=False` | Grafik batang mendatar dari HTML. Tiap baris: (label, nilai, kelas batang, teks catatan, keterangan hover). Lebar batang = nilai / maks. Angka ditulis di ujung kanan, jadi grafik tetap terbaca tanpa warna. |
-| `kepala_halaman` | 418 | `hasil` | Kesimpulan satu kalimat (skill wajib), sebaran golongan, dan empat angka ringkas. |
-| `bagian_skill` | 458 | `hasil` | Grafik semua skill teratas. Warna dan catatan di kanan menunjukkan golongannya. |
-| `bagian_kategori` | 471 | `hasil` | Lima skill teratas di setiap kategori, misalnya bahasa pemrograman atau basis data. |
-| `bagian_bersama` | 483 | `hasil` | Tabel skill pendamping: kalau lowongan meminta X, skill apa lagi yang biasanya ikut diminta. |
-| `bagian_tren` | 497 | `hasil` | Selisih persen antara lowongan baru dan lowongan yang lebih lama. Kosong kalau datanya kurang. |
-| `bagian_ai` | 512 | `temuan` | Kesimpulan AI dan skill di luar kamus beserta kutipan buktinya. Kosong kalau --ai belum dipakai. |
-| `grafik_peran_tingkat` | 532 | `peran_dan_tingkat` | Batang bertumpuk: jumlah lowongan per peran, dipecah per tingkat dari magang sampai pimpinan. |
-| `tabel_pasar` | 550 | `pasar` | Dua tabel kecil: tahun pengalaman yang diminta per tingkat, dan median gaji per peran. |
-| `bagian_pasar` | 569 | `hasil` | Sebaran lowongan per peran dan tingkat, pengalaman yang diminta, dan gaji. |
-| `bagian_contoh` | 578 | `hasil, id_buka` | Lowongan terbaru sebagai bukti. Lowongan yang sudah tutup sejak analisis dibuat tidak ditampilkan. |
-| `bagian_catatan` | 591 | `–` | Sumber data, pemakaian AI, dan batasan analisis. |
-| `buat_menu` | 612 | `isi` | Menu hanya memuat bagian yang benar-benar ada, ditambah tautan ke daftar semua laporan. |
-| `halaman` | 618 | `judul, kepala, isi, menu=''` | Kerangka HTML yang dipakai laporan dan halaman daftar laporan. |
-| `buat_laporan` | 631 | `nama, id_buka=None` | Menulis output/<saringan>/laporan.html dari hasil.json dan mengembalikan lokasinya. id_buka adalah ID semua lowongan yang masih buka. Dipakai untuk menyembunyikan contoh lowongan dan bukti AI dari lowongan yang sudah tutup. |
-| `buat_indeks` | 650 | `–` | Menulis output/index.html: daftar semua laporan yang ada, satu kartu per saringan. Halaman ini sengaja tidak memuat data lowongan, hanya nama saringan, jumlah lowongan, dan waktu laporan dibuat, supaya tidak ada lowongan yang sudah tutup tertinggal di sini. |
+| `e` | 344 | `nilai` | Semua teks dari lowongan dan AI di-escape supaya tidak terbaca sebagai HTML. |
+| `angka` | 349 | `nilai` | Menulis desimal dengan koma, seperti kebiasaan di Indonesia. None menjadi tanda strip. |
+| `tautan` | 356 | `url` | Hanya alamat http atau https yang boleh menjadi tautan; isian lain (misalnya javascript:) diganti. |
+| `rapikan` | 362 | `nama` | Nama di kamus memakai garis bawah (dukungan_it); di laporan ditulis dengan spasi. |
+| `nama_sumber` | 367 | `kode` | Nama tampilan sumber data, misalnya "remoteok" menjadi "Remote OK". |
+| `tanggal_indo` | 372 | `teks` | Mengubah 2026-11-08 menjadi 8 Nov 2026. Teks yang bukan tanggal dikembalikan apa adanya. |
+| `judul_saringan` | 381 | `saringan` | Pertanyaan yang dijawab laporan dalam kata-kata, misalnya "backend junior, lowongan lokal". |
+| `daftar_tag` | 389 | `nama, kelas=''` | Deretan label kecil, satu per nama. |
+| `bungkus` | 394 | `kode, judul, isi, keterangan=''` | Satu bagian laporan. Kodenya menjadi sasaran tautan di menu (#kode). |
+| `grafik_batang` | 400 | `baris, maks, satuan='', catatan=False` | Grafik batang mendatar dari HTML. Tiap baris: (label, nilai, kelas batang, teks catatan, keterangan hover). Lebar batang = nilai / maks. Angka ditulis di ujung kanan, jadi grafik tetap terbaca tanpa warna. |
+| `kepala_halaman` | 419 | `hasil` | Kesimpulan satu kalimat (skill wajib), sebaran golongan, dan empat angka ringkas. |
+| `bagian_skill` | 459 | `hasil` | Grafik semua skill teratas. Warna dan catatan di kanan menunjukkan golongannya. |
+| `bagian_kategori` | 472 | `hasil` | Lima skill teratas di setiap kategori, misalnya bahasa pemrograman atau basis data. |
+| `bagian_bersama` | 484 | `hasil` | Tabel skill pendamping: kalau lowongan meminta X, skill apa lagi yang biasanya ikut diminta. |
+| `bagian_tren` | 498 | `hasil` | Selisih persen antara lowongan baru dan lowongan yang lebih lama. Kosong kalau datanya kurang. |
+| `bagian_ai` | 513 | `temuan` | Kesimpulan AI dan skill di luar kamus beserta kutipan buktinya. Kosong kalau --ai belum dipakai. |
+| `grafik_peran_tingkat` | 533 | `peran_dan_tingkat` | Batang bertumpuk: jumlah lowongan per peran, dipecah per tingkat dari magang sampai pimpinan. |
+| `tabel_pasar` | 551 | `pasar` | Dua tabel kecil: tahun pengalaman yang diminta per tingkat, dan median gaji per peran. |
+| `bagian_pasar` | 570 | `hasil` | Sebaran lowongan per peran dan tingkat, pengalaman yang diminta, dan gaji. |
+| `bagian_contoh` | 579 | `hasil, id_buka` | Lowongan terbaru sebagai bukti. Lowongan yang sudah tutup sejak analisis dibuat tidak ditampilkan. |
+| `bagian_catatan` | 592 | `–` | Sumber data, pemakaian AI, dan batasan analisis. |
+| `buat_menu` | 613 | `isi` | Menu hanya memuat bagian yang benar-benar ada, ditambah tautan ke daftar semua laporan. |
+| `halaman` | 619 | `judul, kepala, isi, menu=''` | Kerangka HTML yang dipakai laporan dan halaman daftar laporan. |
+| `buat_laporan` | 632 | `nama, id_buka=None` | Menulis output/<saringan>/laporan.html dari hasil.json dan mengembalikan lokasinya. id_buka adalah ID semua lowongan yang masih buka. Dipakai untuk menyembunyikan contoh lowongan dan bukti AI dari lowongan yang sudah tutup. |
+| `buat_indeks` | 651 | `–` | Menulis output/index.html: daftar semua laporan yang ada, satu kartu per saringan. Halaman ini sengaja tidak memuat data lowongan, hanya nama saringan, jumlah lowongan, dan waktu laporan dibuat, supaya tidak ada lowongan yang sudah tutup tertinggal di sini. |
 
 ## `jobhunter/berkas.py` (6 fungsi)
 

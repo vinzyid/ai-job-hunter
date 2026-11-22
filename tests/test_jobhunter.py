@@ -183,6 +183,90 @@ def test_lowongan_manual_dengan_kolom_kurang(tmp_path, monkeypatch):
     assert sumber.lengkapi(hasil[0], "manual", "2026-11-12")["wilayah"] == "lokal"
 
 
+def test_ke_tanggal_menerima_milidetik():
+    assert sumber.ke_tanggal(1785827515972) == sumber.ke_tanggal(1785827515) == "2026-08-04"
+
+
+def palsukan_minta(monkeypatch, jawaban):
+    """Mengganti sumber.minta: alamat yang memuat kunci di jawaban mendapat isinya. Tanpa internet."""
+    dipanggil = []
+
+    def minta_palsu(url, parameter=None):
+        dipanggil.append(url)
+        for potongan, isi in jawaban.items():
+            if potongan in url:
+                if isinstance(isi, Exception):
+                    raise isi
+                return isi
+        raise AssertionError(f"alamat tidak terduga: {url}")
+
+    monkeypatch.setattr(sumber, "minta", minta_palsu)
+    return dipanggil
+
+
+def test_ats_hanya_mengambil_lowongan_di_indonesia(monkeypatch):
+    palsukan_minta(monkeypatch, {
+        "lever.co": [
+            {"text": "Backend Engineer", "country": "ID", "categories": {"location": "Jakarta", "commitment": "Permanent"},
+             "createdAt": 1785827515972, "hostedUrl": "https://jobs.lever.co/a/1", "description": "<p>Go and Kafka</p>",
+             "lists": [{"text": "Requirements", "content": "<li>PostgreSQL</li>"}]},
+            {"text": "Backend Engineer", "country": "SG", "categories": {"location": "Singapore"}, "hostedUrl": "u2"},
+        ],
+        "greenhouse.io": {"jobs": [
+            {"title": "Data Analyst", "location": {"name": "Jakarta, Indonesia"}, "absolute_url": "u3",
+             "content": "&lt;p&gt;SQL&lt;/p&gt;", "first_published": "2026-11-01T00:00:00Z"},
+            {"title": "Data Analyst", "location": {"name": "Manila, Philippines"}, "absolute_url": "u4"},
+        ]},
+        "workable.com": {"jobs": [
+            {"title": "QA Engineer", "locations": [{"city": "Jakarta", "country": "Indonesia"}], "telecommuting": True,
+             "url": "u5", "description": "<p>Selenium</p>", "published_on": "2026-11-02"},
+            {"title": "QA Engineer", "locations": [{"city": "Berlin", "country": "Germany"}], "url": "u6"},
+        ]},
+    })
+    _, lever = sumber.ats_lever("a", "PT A")
+    _, greenhouse = sumber.ats_greenhouse("b", "PT B")
+    _, workable = sumber.ats_workable("c", "PT C")
+    assert [len(lever), len(greenhouse), len(workable)] == [1, 1, 1]
+    assert lever[0]["perusahaan"] == "PT A" and lever[0]["tanggal"] == "2026-08-04"
+    assert workable[0]["lokasi"] == "Jakarta, Indonesia (remote)"
+    lengkap = [sumber.lengkapi(isi, "karier_perusahaan", "2026-11-22") for isi in lever + greenhouse + workable]
+    assert all(isi["wilayah"] == "lokal" for isi in lengkap)
+    assert {"Go", "Kafka", "PostgreSQL"} <= set(lengkap[0]["skill"]) and "SQL" in lengkap[1]["skill"]
+
+
+def test_smartrecruiters_hanya_mengambil_rincian_lowongan_it(monkeypatch):
+    dipanggil = palsukan_minta(monkeypatch, {
+        "postings/1": {"postingUrl": "https://jobs.smartrecruiters.com/x/1-backend",
+                       "jobAd": {"sections": {"companyDescription": {"text": "Kami memakai Java"},
+                                              "qualifications": {"title": "Syarat", "text": "<p>Python</p>"}}}},
+        "companies/x/postings": {"totalFound": 2, "content": [
+            {"id": "1", "name": "Backend Engineer", "ref": "https://api.smartrecruiters.com/v1/companies/x/postings/1",
+             "location": {"fullLocation": "Jakarta, , Indonesia"}},
+            {"id": "2", "name": "Sales Manager", "ref": "https://api.smartrecruiters.com/v1/companies/x/postings/2",
+             "location": {"fullLocation": "Jakarta, , Indonesia"}},
+        ]},
+    })
+    _, hasil = sumber.ats_smartrecruiters("x", "PT X")
+    assert len(dipanggil) == 2  # Satu daftar, satu rincian. Lowongan sales tidak diambil rinciannya.
+    assert hasil[0]["lokasi"] == "Jakarta, Indonesia" and hasil[0]["url"].endswith("1-backend")
+    assert "Python" in hasil[0]["deskripsi"] and "Java" not in hasil[0]["deskripsi"]
+    assert sumber.lengkapi(hasil[1], "karier_perusahaan", "2026-11-22") is None
+
+
+def test_satu_perusahaan_gagal_tidak_menghentikan_yang_lain(monkeypatch):
+    monkeypatch.setattr(sumber, "baca_yaml", lambda nama: {"greenhouse": {"rusak": "PT Rusak", "baik": "PT Baik"}})
+    palsukan_minta(monkeypatch, {
+        "boards/rusak": sumber.requests.ConnectionError("putus"),
+        "boards/baik": {"jobs": [{"title": "DevOps Engineer", "location": {"name": "Bandung"}, "absolute_url": "u"}]},
+    })
+    mentah, hasil = sumber.ambil_karier_perusahaan()
+    assert list(mentah) == ["greenhouse/baik"] and hasil[0]["perusahaan"] == "PT Baik"
+
+    monkeypatch.setattr(sumber, "baca_yaml", lambda nama: {"greenhouse": {"rusak": "PT Rusak"}})
+    with pytest.raises(ValueError):
+        sumber.ambil_karier_perusahaan()
+
+
 
 # Analisis skill
 

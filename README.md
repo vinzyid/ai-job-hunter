@@ -15,6 +15,8 @@ pip install -r requirements.txt
 cp .env.example .env      # hanya perlu diisi kalau memakai --ai
 ```
 
+Di Windows (PowerShell): `python -m venv .venv`, lalu `.venv\Scripts\activate`, dan `copy .env.example .env`.
+
 ## Menjalankan program
 
 ```bash
@@ -46,7 +48,7 @@ Daftar semua laporan ada di `output/index.html`.
 
 ```
 API publik ──► sumber.py ──► data/lowongan/lowongan.json ──► analisis.py ──► output/<saringan>/
- (5 sumber)    ambil, rapikan,                                  saring, hitung,     hasil.json, csv,
+ (6 sumber)    ambil, rapikan,                                  saring, hitung,     hasil.json, csv,
                buang yang tutup                                 golongkan            xlsx, png
                                                                      │
                                          temuan_ai.py (--ai) ◄───────┤
@@ -70,6 +72,14 @@ Setiap `ambil` membuang lowongan yang tutup. Lowongan dianggap tutup kalau salah
 4. dicatat sendiri, lalu barisnya dihapus dari `lowongan_manual.csv`.
 
 Aturan 1 dan 3 juga berlaku saat data dibaca. Lowongan yang dibuang dicatat di `data/lowongan/arsip_tutup.jsonl` beserta alasannya. Setelah `ambil`, semua hasil di `output/` dihitung ulang, jadi laporan dan statistik tidak pernah memuat lowongan yang sudah tutup.
+
+### Lowongan lokal dari halaman karier perusahaan
+
+Sumber `karier_perusahaan` mengambil lowongan di Indonesia langsung dari halaman karier perusahaan yang memakai Lever, Greenhouse, SmartRecruiters, atau Workable. Sistem rekrutmen ini menyediakan API JSON publik supaya lowongannya bisa ditampilkan di situs lain. Daftar perusahaannya ada di `konfigurasi/perusahaan.yaml` (saat ini GoTo Group, Ninja Van, Coda, Xendit, Grab, Cermati, Ajaib, dan Amartha). Untuk menambah perusahaan, buka salah satu lowongannya, lihat alamatnya (misalnya `jobs.lever.co/<kode>/...`), lalu tambahkan kodenya di file itu. Lowongan yang bukan IT tetap dibuang oleh kamus peran.
+
+```bash
+python main.py ambil --sumber karier_perusahaan
+```
 
 ### Menambah lowongan lokal sendiri
 
@@ -107,11 +117,11 @@ Tes tidak butuh internet maupun AI.
 
 ## Sumber data
 
-Lowongan berasal dari API publik [Remotive](https://remotive.com), [Arbeitnow](https://www.arbeitnow.com) (hanya yang jarak jauh), [Jobicy](https://jobicy.com), [Himalayas](https://himalayas.app), dan [Remote OK](https://remoteok.com). Semuanya meminta sumber dicantumkan dan tautan mengarah ke halaman asli. Data ini hanya untuk tugas kuliah.
+Lowongan berasal dari API publik [Remotive](https://remotive.com), [Arbeitnow](https://www.arbeitnow.com) (hanya yang jarak jauh), [Jobicy](https://jobicy.com), [Himalayas](https://himalayas.app), dan [Remote OK](https://remoteok.com), ditambah API halaman karier perusahaan di Indonesia (Lever, Greenhouse, SmartRecruiters, Workable). Semuanya meminta sumber dicantumkan dan tautan mengarah ke halaman asli. Data ini hanya untuk tugas kuliah.
 
 ## Batasan
 
-- Lowongan lokal berasal dari satu sumber (Himalayas dengan saringan negara Indonesia) dan jumlahnya puluhan. Ini belum mewakili pasar kerja Indonesia; pakai `--wilayah semua` untuk gambaran yang lebih luas.
+- Lowongan lokal berasal dari Himalayas (saringan negara Indonesia) dan halaman karier delapan perusahaan teknologi, jumlahnya sekitar seratus. Ini lebih condong ke perusahaan besar dan tingkat senior, jadi belum mewakili seluruh pasar kerja Indonesia; pakai `--wilayah semua` untuk gambaran yang lebih luas.
 - Skill dikenali dengan kamus. Skill di luar kamus hanya terlihat lewat `--ai`, dan nama yang mirip bisa ikut terbaca (misalnya "Tailwind CSS" juga terhitung sebagai CSS).
 - Peran dan tingkat ditentukan dari judul lowongan. Judul yang tidak biasa bisa salah golongan; judul tanpa kata tingkat dianggap menengah.
 - Pemeriksaan kutipan hanya memastikan kutipan ada di teks asli, bukan bahwa kesimpulan AI benar.

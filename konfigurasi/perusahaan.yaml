@@ -1,0 +1,30 @@
+# Perusahaan yang lowongannya diambil langsung dari halaman kariernya.
+#
+# Perusahaan ini memasang lowongan lewat sistem rekrutmen (ATS) yang menyediakan
+# API JSON publik, memang dibuat supaya lowongannya bisa ditampilkan di situs lain.
+# Hanya lowongan di Indonesia yang diambil, dan hanya lowongan IT yang disimpan.
+#
+# Format: <ats>: {<kode perusahaan di ATS>: <nama tampilan>}
+# Cara menambah perusahaan: buka halaman karier perusahaan, klik salah satu lowongan,
+# lalu lihat alamatnya:
+#   jobs.lever.co/<kode>/...                 -> lever
+#   job-boards.greenhouse.io/<kode>/...      -> greenhouse
+#   jobs.smartrecruiters.com/<kode>/...      -> smartrecruiters
+#   apply.workable.com/<kode>/...            -> workable
+# Kalau ternyata tidak ada lowongan di Indonesia, perusahaan itu cukup dilewati.
+
+lever:
+  GoToGroup: GoTo Group (Gojek, Tokopedia, GoPay)
+  ninjavan: Ninja Van
+  Coda: Coda (Codashop)
+
+greenhouse:
+  xendit: Xendit
+
+smartrecruiters:
+  Grab: Grab
+  Cermaticom: Cermati
+
+workable:
+  ajaib: Ajaib
+  amartha: Amartha
